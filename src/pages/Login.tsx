@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,30 +7,90 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Eye, EyeOff, Mail, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { toast } = useToast()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simular login - em produção seria integrado com Supabase
-    navigate("/")
+    setIsLoading(true)
+
+    // Simular validação de login
+    try {
+      // Validação básica
+      if (!password) {
+        toast({
+          title: "Erro",
+          description: "Por favor, digite sua senha",
+          variant: "destructive"
+        })
+        return
+      }
+
+      if (loginMethod === "email" && !email) {
+        toast({
+          title: "Erro", 
+          description: "Por favor, digite seu email",
+          variant: "destructive"
+        })
+        return
+      }
+
+      if (loginMethod === "phone" && !phone) {
+        toast({
+          title: "Erro",
+          description: "Por favor, digite seu número de celular", 
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Simular delay de autenticação
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Salvar estado de login no localStorage
+      localStorage.setItem("isLoggedIn", "true")
+      localStorage.setItem("userEmail", loginMethod === "email" ? email : phone)
+
+      toast({
+        title: "Sucesso",
+        description: "Login realizado com sucesso!"
+      })
+
+      navigate("/")
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer login. Tente novamente.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleGoogleLogin = () => {
     // Implementar login com Google
-    console.log("Login com Google")
-    navigate("/")
+    toast({
+      title: "Em desenvolvimento",
+      description: "Login com Google será implementado em breve"
+    })
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/20 p-4">
-      <Card className="w-full max-w-md bg-card shadow-purple border-border">
+      <Card className="w-full max-w-md bg-card shadow-lg border-border">
         <CardHeader className="space-y-1 text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-white">BP</span>
+          <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl font-bold text-primary-foreground">BP</span>
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">Bem-vindo</CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -76,6 +137,8 @@ export default function Login() {
                 id="login"
                 type={loginMethod === "email" ? "email" : "tel"}
                 placeholder={loginMethod === "email" ? "seu@email.com" : "(11) 99999-9999"}
+                value={loginMethod === "email" ? email : phone}
+                onChange={(e) => loginMethod === "email" ? setEmail(e.target.value) : setPhone(e.target.value)}
                 required
                 className="bg-background border-border text-foreground"
               />
@@ -89,6 +152,8 @@ export default function Login() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Digite sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="bg-background border-border text-foreground pr-10"
                 />
@@ -113,8 +178,12 @@ export default function Login() {
             </div>
 
             {/* Botão de login */}
-            <Button type="submit" className="w-full bg-gradient-primary shadow-purple">
-              Entrar
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90"
+              disabled={isLoading}
+            >
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
